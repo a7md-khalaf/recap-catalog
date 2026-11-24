@@ -27,15 +27,30 @@ function embedUrl(v) {
   } catch (e) {}
   return u;
 }
+function fetchJson(url, ms) {
+  const c = new AbortController(); const t = setTimeout(() => c.abort(), ms);
+  return fetch(url, { cache: 'no-store', signal: c.signal }).then(r => { if (!r.ok) throw 0; return r.json(); }).finally(() => clearTimeout(t));
+}
+const okData = d => d && Array.isArray(d.shows);
+// Fast path: show the cached/bundled data.json from this same site right away, then refresh
+// from GitHub in the background (8s limit). If GitHub has newer content, it is cached and the
+// page reloads once to show it. So a slow GitHub never leaves the page blank.
 async function load() {
-  const tries = [];
+  let d = null;
+  try { const c = JSON.parse(localStorage.getItem('rc_cache') || 'null'); if (okData(c)) d = c; } catch (e) {}
+  if (!d) { try { const x = await fetchJson('data.json?v=' + Math.floor(Date.now() / 600000), 6000); if (okData(x)) d = x; } catch (e) {} }
   if (LIVE) {
-    tries.push(() => fetch(`https://api.github.com/repos/${RC.repo}/contents/data.json?ref=${RC.branch}`, { cache: 'no-store', headers: { Accept: 'application/vnd.github.raw+json' } }));
-    tries.push(() => fetch(`${RAW}/data.json?t=${Math.floor(Date.now() / 60000)}`, { cache: 'no-store' }));
+    const shown = JSON.stringify(d);
+    fetchJson(`${RAW}/data.json?t=${Math.floor(Date.now() / 60000)}`, 8000).then(f => {
+      if (!okData(f)) return;
+      const fs = JSON.stringify(f);
+      try { localStorage.setItem('rc_cache', fs); } catch (e) {}
+      if (fs !== shown && !sessionStorage.getItem('rc_reloaded')) { sessionStorage.setItem('rc_reloaded', '1'); location.reload(); }
+    }).catch(() => {});
   }
-  tries.push(() => fetch('data.json', { cache: 'no-cache' }));
-  for (const t of tries) {
-    try { const r = await t(); if (r.ok) { const d = await r.json(); if (d && Array.isArray(d.shows)) return d; } } catch (e) {}
-  }
+  if (d) return d;
+  if (LIVE) { try { const f = await fetchJson(`${RAW}/data.json`, 10000); if (okData(f)) return f; } catch (e) {} }
+  window.RC_FAILED = true;
   return { shows: [] };
 }
+document.addEventListener('DOMContentLoaded', () => { const e = document.getElementById('empty'); if (e) { e.hidden = false; e.textContent = 'جاري التحميل...'; } });
