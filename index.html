@@ -43,7 +43,7 @@ load().then(d=>{d.shows=d.shows.filter(s=>s&&s.title);
       const a=document.createElement('a');a.className='card';a.href='show.html?id='+encodeURIComponent(s.id);
       const i=document.createElement('img');i.src=mediaUrl(s.poster);i.alt=s.title;i.loading='lazy';
       const sp=document.createElement('span');sp.textContent=s.title;a.append(i,sp);g.appendChild(a);});
-    e.hidden=n>0;e.textContent=d.shows.length?'مفيش نتائج.':'لسه مفيش ملخصات. ارجع قريب.';};
+    e.hidden=n>0;e.textContent=window.RC_FAILED?'تعذر تحميل المحتوى. حدّث الصفحة.':(d.shows.length?'مفيش نتائج.':'لسه مفيش ملخصات. ارجع قريب.');};
   q.addEventListener('input',draw);draw();
 });
 </script></body></html>
