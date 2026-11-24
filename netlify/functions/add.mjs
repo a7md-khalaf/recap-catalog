@@ -37,28 +37,67 @@ function eps(list) {
   });
 }
 
+const FALLBACK = 'posters/demo-series.svg';
+function derivePoster(embed) {
+  try { const u = new URL(embed); if (/(^|\.)youtube\.com$/.test(u.hostname) || u.hostname === 'www.youtube-nocookie.com') { const m = u.pathname.match(/^\/embed\/([\w-]{6,20})/); if (m) return `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`; } } catch {}
+  return '';
+}
+function posterOf(raw, firstEmbed) {
+  if (raw) { const p = httpsUrl(raw); if (!p) throw new Error('رابط البوستر لازم يبدأ بـ https.'); return p; }
+  return derivePoster(firstEmbed) || FALLBACK;
+}
+const embedOf = (v, label) => { const u = httpsUrl(typeof v === 'string' ? v.trim() : ''); if (!u) throw new Error((label || '') + 'الرابط أو الكود لازم يبدأ بـ https وصحيح.'); return u; };
+const TYPES = ['مسلسل', 'أنمي', 'برنامج'];
+
 async function apply(b) {
   const { d, sha: s } = await read();
-  const brief = () => d.shows.map(x => ({ id: x.id, title: x.title }));
-  if (b.op === 'list') return { shows: brief() };
+  const full = () => ({ shows: d.shows.map(x => ({ id: x.id, title: x.title, type: x.type, poster: x.poster || '', description: x.description || '', episodes: (x.episodes || []).map(e => ({ title: e.title, embed: e.embed })) })) });
+  if (b.op === 'list') return full();
+  const find = () => { const x = d.shows.find(z => z.id === b.id); if (!x) throw new Error('اختر عمل.'); return x; };
+  const isFilm = x => x.type === 'فيلم';
+  const dup = (t, except) => { if (d.shows.some(z => z !== except && z.title === t)) throw new Error('فيه عمل بنفس الاسم بالفعل.'); };
   let msg;
-  if (b.op === 'addShow') {
-    const title = str(b.title, 120); if (!title) throw new Error('اكتب اسم العمل (حتى 120 حرف).');
-    const type = ['مسلسل', 'فيلم', 'أنمي', 'برنامج'].includes(b.type) ? b.type : 'مسلسل';
+  if (b.op === 'addFilm') {
+    const title = str(b.title, 120); if (!title) throw new Error('اكتب اسم الفيلم (حتى 120 حرف).');
     const desc = str(b.description || '', 1000); if (desc === null) throw new Error('الملخص طويل.');
-    let poster = ''; if (b.poster) { poster = httpsUrl(b.poster); if (!poster) throw new Error('رابط البوستر لازم يبدأ بـ https.'); }
-    if (d.shows.some(x => x.title === title)) throw new Error('العمل ده موجود بالفعل. استخدم خانة إضافة حلقات.');
-    d.shows.push({ id: 's' + Date.now().toString(36), title, type, poster, description: desc, episodes: eps(b.episodes) });
-    msg = 'Add show: ' + title.slice(0, 60);
+    const embed = embedOf(b.embed); dup(title);
+    d.shows.push({ id: 's' + Date.now().toString(36), title, type: 'فيلم', poster: posterOf(b.poster, embed), description: desc, episodes: [{ title, embed }] });
+    msg = 'Add film: ' + title.slice(0, 60);
+  } else if (b.op === 'addSeries') {
+    const title = str(b.title, 120); if (!title) throw new Error('اكتب اسم المسلسل (حتى 120 حرف).');
+    const desc = str(b.description || '', 1000); if (desc === null) throw new Error('الملخص طويل.');
+    const type = TYPES.includes(b.type) ? b.type : 'مسلسل';
+    const e = eps(b.episodes); dup(title);
+    d.shows.push({ id: 's' + Date.now().toString(36), title, type, poster: posterOf(b.poster, e[0].embed), description: desc, episodes: e });
+    msg = 'Add series: ' + title.slice(0, 60);
   } else if (b.op === 'addEps') {
-    const x = d.shows.find(z => z.id === b.id); if (!x) throw new Error('اختر عمل.');
+    const x = find(); if (isFilm(x)) throw new Error('الإضافة للمسلسلات فقط.');
     x.episodes = (x.episodes || []).concat(eps(b.episodes)); msg = 'Add episodes: ' + x.title.slice(0, 60);
+  } else if (b.op === 'editShow') {
+    const x = find();
+    if (b.title !== undefined) { const t = str(b.title, 120); if (!t) throw new Error('الاسم فاضي أو طويل.'); dup(t, x); x.title = t; if (isFilm(x) && x.episodes[0]) x.episodes[0].title = t; }
+    if (b.description !== undefined) { const t = str(b.description, 1000); if (t === null) throw new Error('الملخص طويل.'); x.description = t; }
+    if (b.poster !== undefined) x.poster = posterOf(b.poster, x.episodes && x.episodes[0] && x.episodes[0].embed);
+    if (b.type !== undefined && !isFilm(x)) { if (!TYPES.includes(b.type)) throw new Error('نوع غير صالح.'); x.type = b.type; }
+    msg = 'Edit: ' + x.title.slice(0, 60);
+  } else if (b.op === 'editEp') {
+    const x = find(); const i = Number(b.index); const e = x.episodes && x.episodes[i]; if (!e) throw new Error('الحلقة غير موجودة.');
+    if (b.embed !== undefined) { e.embed = embedOf(b.embed); if (i === 0 && (!x.poster || x.poster === FALLBACK)) x.poster = derivePoster(e.embed) || x.poster || FALLBACK; }
+    if (b.title !== undefined && !isFilm(x)) { const t = str(b.title, 120); if (!t) throw new Error('اسم الحلقة فاضي أو طويل.'); e.title = t; }
+    msg = 'Edit episode: ' + x.title.slice(0, 50);
+  } else if (b.op === 'delEps') {
+    const x = find(); if (isFilm(x)) throw new Error('احذف الفيلم كامل.');
+    const idx = new Set((Array.isArray(b.indexes) ? b.indexes : []).map(Number)); if (!idx.size) throw new Error('اختر حلقة واحدة على الأقل.');
+    const keep = (x.episodes || []).filter((_, i) => !idx.has(i));
+    if (b.all) { x.episodes = []; } else x.episodes = keep;
+    msg = 'Delete episodes: ' + x.title.slice(0, 50);
+  } else if (b.op === 'delAllEps') {
+    const x = find(); if (isFilm(x)) throw new Error('احذف الفيلم كامل.'); x.episodes = []; msg = 'Delete all episodes: ' + x.title.slice(0, 50);
   } else if (b.op === 'delShow') {
-    const x = d.shows.find(z => z.id === b.id); if (!x) throw new Error('اختر عمل.');
-    d.shows = d.shows.filter(z => z !== x); msg = 'Delete show: ' + x.title.slice(0, 60);
+    const x = find(); d.shows = d.shows.filter(z => z !== x); msg = 'Delete: ' + x.title.slice(0, 60);
   } else throw new Error('طلب غير معروف.');
   await write(d, s, msg);
-  return { ok: true, shows: brief() };
+  return full();
 }
 
 export default async (req) => {
