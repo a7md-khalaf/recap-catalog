@@ -76,23 +76,6 @@
           "embed": "https://www.youtube.com/embed/U3Mwzj1Zf68"
         }
       ]
-    },
-    {
-      "id": "smwv592bq",
-      "title": "TESTSER",
-      "type": "مسلسل",
-      "poster": "https://i.ytimg.com/vi/U3Mwzj1Zf68/hqdefault.jpg",
-      "description": "",
-      "episodes": [
-        {
-          "title": "ح2",
-          "embed": "https://mp4plus.org/embed-NEW.html"
-        },
-        {
-          "title": "ح4",
-          "embed": "https://mp4plus.org/embed-4.html"
-        }
-      ]
     }
   ]
 }
