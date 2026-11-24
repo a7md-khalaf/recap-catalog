@@ -63,6 +63,19 @@
           "embed": "https://vidoba.org/mxmu80a1mmz3.html"
         }
       ]
+    },
+    {
+      "id": "smwv58wl8",
+      "title": "TESTFILM",
+      "type": "فيلم",
+      "poster": "posters/demo-series.svg",
+      "description": "",
+      "episodes": [
+        {
+          "title": "TESTFILM",
+          "embed": "https://mp4plus.org/embed-abc.html"
+        }
+      ]
     }
   ]
 }
