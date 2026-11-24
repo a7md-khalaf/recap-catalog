@@ -1,58 +1,34 @@
 <!doctype html>
-<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#151515"><title>إضافة محتوى</title>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#151515"><title>لوحة التحكم</title>
 <link rel="stylesheet" href="style.css">
 <style>
 body{padding:16px;max-width:560px;margin:0 auto}
-h1{font-size:22px}h2{font-size:17px;margin:22px 0 8px}
+h1{font-size:22px;margin:6px 0}h2{font-size:17px;margin:18px 0 8px}
 label{display:block;margin:12px 0 4px;font-size:14px;color:#ccc}
 input,select,textarea{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #444;background:#222;color:#fff;font:inherit;font-size:16px}
-textarea{min-height:110px;direction:ltr;text-align:left}
-button{margin-top:14px;padding:13px 18px;border:0;border-radius:10px;background:#e8503a;color:#fff;font:inherit;font-size:16px;width:100%}
-button.sec{background:#333}button.del{background:#7a1f1f}
-.box{background:#1b1b1b;border:1px solid #333;border-radius:12px;padding:14px;margin-top:16px}
-#msg{position:sticky;top:0;padding:12px;border-radius:10px;margin:10px 0;display:none;font-size:15px}
+textarea{min-height:90px}
+.ltr{direction:ltr;text-align:left}
+button{margin-top:12px;padding:13px 18px;border:0;border-radius:10px;background:#e8503a;color:#fff;font:inherit;font-size:16px;width:100%}
+button.sec{background:#333}button.del{background:#7a1f1f}button.big{padding:18px;font-size:18px;background:#262626;border:1px solid #3a3a3a;text-align:right}
+button:disabled{opacity:.5}
+.box{background:#1b1b1b;border:1px solid #333;border-radius:12px;padding:14px;margin-top:14px}
+#msg{position:sticky;top:0;z-index:5;padding:12px;border-radius:10px;margin:10px 0;display:none;font-size:15px}
 .ok{background:#14532d}.err{background:#7a1f1f}
 small{color:#999;display:block;margin-top:4px}
+.row{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #2a2a2a}
+.row input[type=checkbox]{width:22px;height:22px;flex:none}
+.row span{flex:1;word-break:break-word}.row button{width:auto;margin:0;padding:8px 14px;font-size:14px}
+.crumb{color:#999;font-size:14px;margin:6px 0}
 </style></head><body>
-<h1>إضافة محتوى للموقع</h1>
+<h1>لوحة التحكم</h1>
 <div id="msg"></div>
-
 <div class="box" id="tokenBox">
 <h2>الدخول</h2>
 <label>الباسورد</label>
 <input id="token" type="password" autocomplete="current-password" placeholder="الباسورد">
 <button id="saveToken">دخول</button>
-<small id="tokState"></small>
 </div>
-
-<div id="main" style="display:none">
-<div class="box">
-<h2>١) إضافة عمل جديد</h2>
-<label>اسم العمل</label><input id="nTitle" maxlength="120">
-<label>النوع</label><select id="nType"><option>مسلسل</option><option>فيلم</option><option>أنمي</option><option>برنامج</option></select>
-<label>الملخص (اختياري)</label><textarea id="nDesc" style="direction:rtl;text-align:right;min-height:80px" maxlength="1000"></textarea>
-<label>رابط البوستر (اختياري، رابط صورة https)</label><input id="nPoster" dir="ltr" inputmode="url">
-<label>الحلقات: كل حلقة في سطر بالشكل: اسم الحلقة | رابط أو كود التضمين</label>
-<textarea id="nEps" placeholder="الحلقة 1 | https://mp4plus.org/embed-xxxx.html&#10;الحلقة 2 | https://youtu.be/xxxx"></textarea>
-<small>الفيلم: سطر واحد فقط.</small>
-<button id="addShow">إضافة العمل</button>
-</div>
-
-<div class="box">
-<h2>٢) إضافة حلقات لعمل موجود</h2>
-<label>اختر العمل</label><select id="eShow"></select>
-<label>الحلقات (سطر لكل حلقة: اسم | رابط)</label>
-<textarea id="eEps"></textarea>
-<button id="addEps">إضافة الحلقات</button>
-</div>
-
-<div class="box">
-<h2>٣) حذف عمل</h2>
-<select id="dShow"></select>
-<button class="del" id="delShow">حذف العمل نهائياً</button>
-</div>
-<button class="sec" id="logout">تسجيل خروج</button>
-</div>
+<div id="app" style="display:none"></div>
 
 <script src="site-config.js"></script>
 <script src="app.js"></script>
@@ -60,20 +36,23 @@ small{color:#999;display:block;margin-top:4px}
 const $=id=>document.getElementById(id);
 const FN='/.netlify/functions/add';
 const pw=()=>localStorage.getItem('rc_pw')||'';
+let DATA={shows:[]};
+const stack=[];
 function msg(t,ok){const m=$('msg');m.textContent=t;m.className=ok?'ok':'err';m.style.display='block';m.scrollIntoView({block:'center'});}
+function clearMsg(){$('msg').style.display='none';}
 async function call(o){
   let r;try{r=await fetch(FN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({password:pw()},o))});}catch(e){throw new Error('مفيش اتصال. حاول مرة ثانية.');}
   let j={};try{j=await r.json();}catch(e){}
-  if(r.status===401){localStorage.removeItem('rc_pw');$('main').style.display='none';$('tokenBox').style.display='block';throw new Error(j.error||'الباسورد غلط.');}
+  if(r.status===401){localStorage.removeItem('rc_pw');$('app').style.display='none';$('tokenBox').style.display='block';throw new Error(j.error||'الباسورد غلط.');}
   if(!r.ok)throw new Error(j.error||'حصل خطأ ('+r.status+')');
+  if(j.shows)DATA=j;
   return j;
 }
 function cleanEmbed(v){
-  const u=embedUrl(v);
-  let x;try{x=new URL(u);}catch(e){return null;}
-  if(x.protocol!=='https:'||!x.hostname.includes('.'))return null;
-  return u;
+  const u=embedUrl(v);let x;try{x=new URL(u);}catch(e){return null;}
+  if(x.protocol!=='https:'||!x.hostname.includes('.'))return null;return u;
 }
+function oneEmbed(v){const u=cleanEmbed(v);if(!u)throw new Error('الرابط أو الكود لازم يبدأ بـ https وصحيح.');return u;}
 function parseEps(txt){
   const lines=txt.split('\n').map(s=>s.trim()).filter(Boolean);
   if(!lines.length)throw new Error('اكتب حلقة واحدة على الأقل.');
@@ -87,31 +66,123 @@ function parseEps(txt){
     return{title,embed:emb};
   });
 }
-function fill(shows){
-  for(const id of['eShow','dShow']){$(id).innerHTML='';shows.forEach(s=>{const o=document.createElement('option');o.value=s.id;o.textContent=s.title;$(id).appendChild(o);});}
+function posterOk(p){if(!p)return;try{if(new URL(p).protocol!=='https:')throw 0;}catch(_){throw new Error('رابط البوستر لازم يبدأ بـ https.');}}
+// tiny view helpers
+function h(tag,attrs,...kids){const e=document.createElement(tag);for(const k in(attrs||{})){if(k==='onclick')e.onclick=attrs[k];else if(k==='class')e.className=attrs[k];else e.setAttribute(k,attrs[k]);}kids.flat().forEach(c=>e.append(c instanceof Node?c:String(c)));return e;}
+function field(label,el,hint){const w=h('div',{},h('label',{},label),el);if(hint)w.append(h('small',{},hint));return w;}
+function inp(id,v,ltr){const e=h('input',{id,class:ltr?'ltr':''});e.value=v||'';return e;}
+function area(id,v,ltr,ph){const e=h('textarea',{id,class:ltr?'ltr':''});e.value=v||'';if(ph)e.placeholder=ph;return e;}
+function btn(t,fn,cls){const b=h('button',{class:cls||''},t);b.onclick=async()=>{b.disabled=true;try{await fn();}catch(e){msg(e.message,false);}b.disabled=false;};return b;}
+function go(view){stack.push(view);render();}
+function back(){stack.pop();render();}
+function home(){stack.length=0;stack.push(menu);render();}
+function render(){clearMsg();const a=$('app');a.innerHTML='';const v=stack[stack.length-1];const wrap=h('div');
+  if(stack.length>1){wrap.append(h('button',{class:'sec',onclick:back},'← رجوع'));}
+  a.append(wrap);v(wrap);window.scrollTo(0,0);}
+const films=()=>DATA.shows.filter(s=>s.type==='فيلم'),series=()=>DATA.shows.filter(s=>s.type!=='فيلم');
+function picker(list,onPick,emptyText){
+  const w=h('div',{class:'box'});if(!list.length)w.append(h('small',{},emptyText));
+  list.forEach(s=>w.append(h('div',{class:'row'},h('span',{},s.title),h('button',{class:'sec',onclick:()=>onPick(s.id)},'اختيار'))));return w;
 }
-async function enter(){const j=await call({op:'list'});fill(j.shows);$('tokenBox').style.display='none';$('main').style.display='block';}
-async function run(btn,fn){btn.disabled=true;try{await fn();}catch(e){msg(e.message,false);}btn.disabled=false;}
-$('saveToken').onclick=e=>run(e.target,async()=>{const v=$('token').value;if(!v.trim())return msg('اكتب الباسورد.',false);localStorage.setItem('rc_pw',v.trim());$('token').value='';await enter();});
-$('logout').onclick=()=>{localStorage.removeItem('rc_pw');location.reload();};
-$('addShow').onclick=e=>run(e.target,async()=>{
-  const title=$('nTitle').value.trim();if(!title||title.length>120)return msg('اكتب اسم العمل (حتى 120 حرف).',false);
-  const poster=$('nPoster').value.trim();
-  if(poster){try{if(new URL(poster).protocol!=='https:')throw 0;}catch(_){return msg('رابط البوستر لازم يبدأ بـ https.',false);}}
-  const episodes=parseEps($('nEps').value);
-  const j=await call({op:'addShow',title,type:$('nType').value,description:$('nDesc').value.trim(),poster,episodes});
-  ['nTitle','nDesc','nPoster','nEps'].forEach(i=>$(i).value='');
-  fill(j.shows);msg('تمت الإضافة. تظهر على الموقع خلال دقائق قليلة.',true);
-});
-$('addEps').onclick=e=>run(e.target,async()=>{
-  const episodes=parseEps($('eEps').value);
-  const j=await call({op:'addEps',id:$('eShow').value,episodes});
-  $('eEps').value='';fill(j.shows);msg('تمت إضافة '+episodes.length+' حلقة.',true);
-});
-$('delShow').onclick=e=>run(e.target,async()=>{
-  const o=$('dShow').selectedOptions[0];if(!o)return msg('اختر عمل.',false);
-  if(!confirm('حذف "'+o.textContent+'" نهائياً؟'))return;
-  const j=await call({op:'delShow',id:o.value});fill(j.shows);msg('تم الحذف.',true);
-});
+const byId=id=>DATA.shows.find(s=>s.id===id);
+
+// ---- views
+function menu(w){
+  w.append(h('div',{class:'crumb'},`الأفلام: ${films().length} · المسلسلات: ${series().length}`));
+  w.append(btn('➕ إضافة',()=>go(addMenu),'big'),btn('✏️ تعديل',()=>go(editMenu),'big'),btn('🗑 حذف',()=>go(delMenu),'big'),btn('📋 المحتوى الحالي',()=>go(listView),'big'));
+  w.append(btn('تسجيل خروج',()=>{localStorage.removeItem('rc_pw');location.reload();},'sec'));
+}
+function addMenu(w){
+  w.append(h('h2',{},'إضافة'),btn('🎬 إضافة فيلم',()=>go(addFilm),'big'),btn('📺 إضافة مسلسل',()=>go(addSeries),'big'),btn('➕ إضافة حلقات لمسلسل موجود',()=>go(addEpsPick),'big'));
+}
+function addFilm(w){
+  w.append(h('h2',{},'إضافة فيلم'));
+  const b=h('div',{class:'box'});
+  b.append(field('اسم الفيلم',inp('f1')),field('كود التضمين أو الرابط',area('f2','',true),'الصق رابط يوتيوب أو كود iframe أو رابط التضمين'),field('الملخص (اختياري)',area('f3')),field('رابط البوستر (اختياري)',inp('f4','',true),'لو الفيديو يوتيوب وسبته فاضي، البوستر بيتاخد تلقائي من الفيديو'));
+  b.append(btn('إضافة الفيلم',async()=>{
+    const title=$('f1').value.trim();if(!title||title.length>120)throw new Error('اكتب اسم الفيلم (حتى 120 حرف).');
+    const embed=oneEmbed($('f2').value);const poster=$('f4').value.trim();posterOk(poster);
+    await call({op:'addFilm',title,embed,description:$('f3').value.trim(),poster});msg('تمت إضافة الفيلم. يظهر على الموقع خلال دقائق.',true);stack.length=1;render();msg('تمت إضافة الفيلم. يظهر على الموقع خلال دقائق.',true);
+  }));w.append(b);
+}
+function addSeries(w){
+  w.append(h('h2',{},'إضافة مسلسل'));
+  const sel=h('select',{id:'s2'},...['مسلسل','أنمي','برنامج'].map(t=>h('option',{},t)));
+  const b=h('div',{class:'box'});
+  b.append(field('اسم المسلسل',inp('s1')),field('النوع',sel),field('الملخص (اختياري)',area('s3')),field('رابط البوستر (اختياري)',inp('s4','',true),'لو سبته فاضي ولينك الحلقة الأولى يوتيوب، البوستر تلقائي'),field('الحلقات: كل حلقة في سطر',area('s5','',true,'الحلقة 1 | https://youtu.be/xxxx\nالحلقة 2 | كود التضمين'),'الشكل: اسم الحلقة | الرابط أو الكود'));
+  b.append(btn('إضافة المسلسل',async()=>{
+    const title=$('s1').value.trim();if(!title||title.length>120)throw new Error('اكتب اسم المسلسل (حتى 120 حرف).');
+    const poster=$('s4').value.trim();posterOk(poster);const episodes=parseEps($('s5').value);
+    await call({op:'addSeries',title,type:$('s2').value,description:$('s3').value.trim(),poster,episodes});stack.length=1;render();msg('تمت إضافة المسلسل. يظهر على الموقع خلال دقائق.',true);
+  }));w.append(b);
+}
+function addEpsPick(w){
+  w.append(h('h2',{},'اختر المسلسل'),picker(series(),id=>go(x=>addEps(x,id)),'مفيش مسلسلات لسه.'));
+}
+function addEps(w,id){
+  const s=byId(id);if(!s)return home();
+  w.append(h('h2',{},'إضافة حلقات: '+s.title),h('div',{class:'crumb'},`الحلقات الحالية: ${s.episodes.length}`));
+  const b=h('div',{class:'box'});
+  b.append(field('الحلقات الجديدة: كل حلقة في سطر',area('e1','',true,'الحلقة 5 | https://youtu.be/xxxx')));
+  b.append(btn('إضافة الحلقات',async()=>{const episodes=parseEps($('e1').value);await call({op:'addEps',id,episodes});stack.length=1;render();msg('تمت إضافة '+episodes.length+' حلقة.',true);}));w.append(b);
+}
+function editMenu(w){
+  w.append(h('h2',{},'تعديل'),btn('🎬 تعديل فيلم',()=>go(x=>x.append(h('h2',{},'اختر الفيلم'),picker(films(),id=>go(y=>editFilm(y,id)),'مفيش أفلام لسه.'))),'big'),
+    btn('📺 تعديل مسلسل',()=>go(x=>x.append(h('h2',{},'اختر المسلسل'),picker(series(),id=>go(y=>editSeries(y,id)),'مفيش مسلسلات لسه.'))),'big'));
+}
+function infoBox(s,isFilm){
+  const b=h('div',{class:'box'});
+  b.append(field(isFilm?'اسم الفيلم':'اسم المسلسل',inp('i1',s.title)),field('الملخص',area('i3',s.description)),field('رابط البوستر',inp('i4',s.poster&&!/^posters\//.test(s.poster)?s.poster:'',true),'سيبه فاضي علشان يتاخد تلقائي من يوتيوب'));
+  b.append(btn('حفظ بيانات العمل',async()=>{const poster=$('i4').value.trim();posterOk(poster);
+    await call({op:'editShow',id:s.id,title:$('i1').value.trim(),description:$('i3').value.trim(),poster});render();msg('تم الحفظ.',true);}));
+  return b;
+}
+function editFilm(w,id){
+  const s=byId(id);if(!s)return home();
+  w.append(h('h2',{},'تعديل فيلم: '+s.title),infoBox(s,true));
+  const b=h('div',{class:'box'});
+  b.append(h('h2',{},'كود التضمين'),field('الكود أو الرابط الجديد',area('v1',s.episodes[0]?s.episodes[0].embed:'',true)));
+  b.append(btn('حفظ الكود',async()=>{const embed=oneEmbed($('v1').value);await call({op:'editEp',id,index:0,embed});render();msg('تم حفظ الكود.',true);}));w.append(b);
+}
+function editSeries(w,id){
+  const s=byId(id);if(!s)return home();
+  w.append(h('h2',{},'تعديل مسلسل: '+s.title),infoBox(s,false));
+  const b=h('div',{class:'box'});b.append(h('h2',{},'الحلقات'));
+  if(!s.episodes.length)b.append(h('small',{},'مفيش حلقات.'));
+  s.episodes.forEach((e,i)=>b.append(h('div',{class:'row'},h('span',{},e.title),h('button',{class:'sec',onclick:()=>go(x=>editEp(x,id,i))},'تعديل'))));
+  w.append(b);
+}
+function editEp(w,id,i){
+  const s=byId(id);const e=s&&s.episodes[i];if(!e)return home();
+  w.append(h('h2',{},'تعديل حلقة: '+e.title));
+  const b=h('div',{class:'box'});
+  b.append(field('اسم الحلقة',inp('x1',e.title)),field('الكود أو الرابط',area('x2',e.embed,true)));
+  b.append(btn('حفظ',async()=>{const embed=oneEmbed($('x2').value);await call({op:'editEp',id,index:i,title:$('x1').value.trim(),embed});back();msg('تم حفظ الحلقة.',true);}));w.append(b);
+}
+function delMenu(w){
+  w.append(h('h2',{},'حذف'),btn('🎬 حذف فيلم',()=>go(x=>x.append(h('h2',{},'اختر الفيلم'),picker(films(),id=>go(y=>delFilm(y,id)),'مفيش أفلام.'))),'big'),
+    btn('📺 حذف مسلسل أو حلقات',()=>go(x=>x.append(h('h2',{},'اختر المسلسل'),picker(series(),id=>go(y=>delSeries(y,id)),'مفيش مسلسلات.'))),'big'));
+}
+function delFilm(w,id){
+  const s=byId(id);if(!s)return home();
+  w.append(h('h2',{},'حذف الفيلم: '+s.title),h('div',{class:'box'},h('small',{},'الحذف نهائي.'),btn('حذف الفيلم نهائياً',async()=>{if(!confirm('حذف "'+s.title+'" نهائياً؟'))return;await call({op:'delShow',id});stack.length=1;render();msg('تم حذف الفيلم.',true);},'del')));
+}
+function delSeries(w,id){
+  const s=byId(id);if(!s)return home();
+  w.append(h('h2',{},'حذف من: '+s.title));
+  const b=h('div',{class:'box'});b.append(h('small',{},'علّم الحلقات اللي عايز تحذفها:'));
+  const cbs=[];s.episodes.forEach((e,i)=>{const c=h('input',{type:'checkbox'});cbs.push(c);b.append(h('label',{class:'row',style:'margin:0;color:#fff'},c,h('span',{},e.title)));});
+  b.append(btn('حذف الحلقات المحددة',async()=>{const indexes=cbs.map((c,i)=>c.checked?i:-1).filter(i=>i>=0);if(!indexes.length)throw new Error('اختر حلقة واحدة على الأقل.');if(indexes.length===s.episodes.length)throw new Error('دي كل الحلقات. استخدم "حذف كل الحلقات" أو "حذف المسلسل كامل".');if(!confirm('حذف '+indexes.length+' حلقة؟'))return;await call({op:'delEps',id,indexes});render();msg('تم حذف الحلقات.',true);},'del'));
+  b.append(btn('حذف كل الحلقات (المسلسل يفضل بدون حلقات)',async()=>{if(!confirm('حذف كل حلقات "'+s.title+'"؟'))return;await call({op:'delAllEps',id});render();msg('تم حذف كل الحلقات.',true);},'del'));
+  b.append(btn('حذف المسلسل كامل',async()=>{if(!confirm('حذف مسلسل "'+s.title+'" بالكامل؟'))return;await call({op:'delShow',id});stack.length=1;render();msg('تم حذف المسلسل.',true);},'del'));
+  w.append(b);
+}
+function listView(w){
+  w.append(h('h2',{},'المحتوى الحالي'));
+  const sec=(t,l)=>{const b=h('div',{class:'box'},h('h2',{},t));if(!l.length)b.append(h('small',{},'لا يوجد.'));l.forEach(s=>b.append(h('div',{class:'row'},h('span',{},s.title+(s.type==='فيلم'?'':` (${s.episodes.length} حلقة)`)))));w.append(b);};
+  sec('الأفلام',films());sec('المسلسلات',series());
+}
+async function enter(){await call({op:'list'});$('tokenBox').style.display='none';$('app').style.display='block';home();}
+$('saveToken').onclick=async e=>{const b=e.target;b.disabled=true;try{const v=$('token').value;if(!v.trim())throw new Error('اكتب الباسورد.');localStorage.setItem('rc_pw',v.trim());$('token').value='';await enter();}catch(x){msg(x.message,false);}b.disabled=false;};
 if(pw())enter().catch(e=>msg(e.message,false));
 </script></body></html>
