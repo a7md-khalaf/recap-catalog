@@ -1,0 +1,43 @@
+backend:
+  name: git-gateway
+  branch: main
+
+locale: ar
+publish_mode: simple
+media_folder: uploads
+public_folder: /uploads
+site_url: /
+display_url: /
+
+collections:
+  - name: catalog
+    label: الكتالوج
+    editor:
+      preview: false
+    files:
+      - name: shows
+        label: الأعمال والحلقات
+        file: data.json
+        description: "كل الأعمال في قائمة واحدة. اضغط على عمل لتعديله، أو اضغط إضافة لعمل جديد."
+        fields:
+          - label: الأعمال
+            label_singular: عمل
+            name: shows
+            widget: list
+            summary: "{{fields.title}}"
+            fields:
+              - { label: "المعرّف (تلقائي)", name: id, widget: uuid }
+              - { label: الاسم, name: title, widget: string }
+              - { label: النوع, name: type, widget: select, options: [مسلسل, فيلم, برنامج, أخرى], default: مسلسل }
+              - { label: البوستر, name: poster, widget: image, required: false, hint: "اختار صورة من الموبايل" }
+              - { label: وصف قصير, name: description, widget: text, required: false }
+              - label: الحلقات
+                label_singular: حلقة
+                name: episodes
+                widget: list
+                required: false
+                summary: "{{fields.title}}"
+                hint: "للفيلم ضيف حلقة واحدة."
+                fields:
+                  - { label: اسم الحلقة, name: title, widget: string, hint: "مثال: الحلقة ١" }
+                  - { label: رابط أو كود الفيديو, name: embed, widget: string, hint: "الصق رابط https أو كود iframe كامل" }
