@@ -186,3 +186,4 @@ async function enter(){await call({op:'list'});$('tokenBox').style.display='none
 $('saveToken').onclick=async e=>{const b=e.target;b.disabled=true;try{const v=$('token').value;if(!v.trim())throw new Error('اكتب الباسورد.');localStorage.setItem('rc_pw',v.trim());$('token').value='';await enter();}catch(x){msg(x.message,false);}b.disabled=false;};
 if(pw())enter().catch(e=>msg(e.message,false));
 </script></body></html>
+<!-- v2 -->
