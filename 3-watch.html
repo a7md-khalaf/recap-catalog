@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#151515"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"><title>مشاهدة · عرض خاص</title></head>
+<body>
+<header class="top"><a class="brand" href="index.html"><span class="mark" aria-hidden="true">&#9654;</span><div class="logo" id="site-name">عرض خاص</div></a></header>
+<main>
+<section style="padding-top:22px" aria-label="مشغل الفيديو">
+  <h1 id="ep-title" style="font-size:20px;margin-bottom:12px"></h1>
+  <div class="video" dir="ltr"><iframe id="video-player" scrolling="auto" title="فيديو" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+  <div class="watch">شاهد الآن</div>
+  <p class="watch-link" id="link-wrap">لو الفيديو مش شغّال، <a id="youtube-link" href="#" target="_blank" rel="noopener noreferrer">افتحه في صفحة جديدة</a></p>
+  <div class="nav" id="nav"></div>
+</section>
+<script src="site-config.js"></script>
+<script src="app.js"></script>
+<script>
+(async () => {
+  'use strict';
+  const params = new URLSearchParams(window.location.search);
+  const player = document.getElementById('video-player');
+  const link = document.getElementById('youtube-link');
+  const val = (k) => (params.get(k) || '').trim();
+  // Catalog lookup: ?show=ID&ep=N fills in the embed URL from data.json. A direct ?src= still works.
+  try {
+    const d = await load();
+        const s = d.shows.find((x) => x.id === val('show'));
+    const n = parseInt(val('ep'), 10);
+    if (s && (s.episodes || [])[n - 1]) {
+      const ep = (s.episodes || [])[n - 1];
+      if (!val('src')) params.set('src', embedUrl(ep.embed));
+      const t = s.title + ' · ' + ep.title;
+      document.getElementById('ep-title').textContent = t;
+      document.title = t;
+      const nav = document.getElementById('nav');
+      const add = (href, txt) => { const a = document.createElement('a'); a.href = href; a.textContent = txt; nav.appendChild(a); };
+      add('show.html?id=' + encodeURIComponent(s.id), 'كل الحلقات');
+      if (n > 1) add('watch.html?show=' + encodeURIComponent(s.id) + '&ep=' + (n - 1), 'الحلقة السابقة');
+      if (n < (s.episodes || []).length) add('watch.html?show=' + encodeURIComponent(s.id) + '&ep=' + (n + 1), 'الحلقة التالية');
+    }
+  } catch (e) {}
+const parseUrl = (raw) => {
+            try { const u = new URL(raw); return u.protocol === 'https:' ? u : null; } catch (e) { return null; }
+          };
+          const hostIs = (u, list) => list.some((h) => u.hostname === h || u.hostname.endsWith('.' + h));
+          const portrait = () => {
+            const wrap = player.parentElement;
+            wrap.style.aspectRatio = '9 / 16';
+            wrap.style.maxWidth = '420px';
+            wrap.style.marginInline = 'auto';
+          };
+          const setLink = (href, name) => {
+            link.href = href;
+            link.innerHTML = 'افتحه على <bdi>' + name + '</bdi>';
+          };
+          // Each resolver returns {embed, open, name, tall?} or null.
+          const resolvers = {
+            fb: (raw) => {
+              let url = '';
+              if (/^\d{6,}$/.test(raw)) url = 'https://www.facebook.com/reel/' + raw + '/';
+              else { const u = parseUrl(raw); if (u && (hostIs(u, ['facebook.com']) || u.hostname === 'fb.watch')) url = u.href; }
+              return url && { embed: 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(url) + '&show_text=false&width=560', open: url, name: 'Facebook', tall: params.get('r') === 'p' };
+            },
+            tt: (raw) => {
+              let id = /^\d{8,}$/.test(raw) ? raw : '';
+              if (!id) { const u = parseUrl(raw); const m = u && hostIs(u, ['tiktok.com']) && u.pathname.match(/\/video\/(\d+)/); if (m) id = m[1]; }
+              return id && { embed: 'https://www.tiktok.com/embed/v2/' + id, open: 'https://www.tiktok.com/video/' + id, name: 'TikTok', tall: true };
+            },
+            x: (raw) => {
+              let id = /^\d{5,}$/.test(raw) ? raw : '';
+              if (!id) { const u = parseUrl(raw); const m = u && hostIs(u, ['x.com', 'twitter.com']) && u.pathname.match(/\/status(?:es)?\/(\d+)/); if (m) id = m[1]; }
+              return id && { embed: 'https://platform.twitter.com/embed/Tweet.html?dnt=true&theme=dark&id=' + id, open: 'https://x.com/i/status/' + id, name: 'X', tall: true };
+            },
+            ig: (raw) => {
+              let code = /^[A-Za-z0-9_-]{5,}$/.test(raw) ? raw : '';
+              if (!code) { const u = parseUrl(raw); const m = u && hostIs(u, ['instagram.com']) && u.pathname.match(/\/(?:p|reel|reels|tv)\/([A-Za-z0-9_-]+)/); if (m) code = m[1]; }
+              return code && { embed: 'https://www.instagram.com/p/' + code + '/embed', open: 'https://www.instagram.com/p/' + code + '/', name: 'Instagram', tall: true };
+            },
+            src: (raw) => {
+              const u = parseUrl(raw);
+              return u && { embed: u.href, open: u.href, name: '', tall: params.get('r') === 'p' };
+            }
+          };
+
+  const hit = val('src') ? resolvers.src(val('src')) : null;
+  if (hit) {
+    if (hit.tall) portrait();
+    player.src = hit.embed;
+    link.href = hit.open;
+  } else {
+    document.getElementById('link-wrap').hidden = true;
+    player.parentElement.outerHTML = '<p class="empty">الفيديو مش متاح.</p>';
+  }
+})();
+</script>
+    <section class="ad-section" aria-label="بانر">
+      <p class="ad-label">مساحة إعلانية</p>
+      <!-- ADSTERRA_BANNER -->
+      <div class="banner-wrap"><div class="banner" dir="ltr">
+        <script>
+          atOptions = {
+            'key' : '5c1550e34ba939167769c099118febce',
+            'format' : 'iframe',
+            'height' : 50,
+            'width' : 320,
+            'params' : {}
+          };
+        </script>
+        <script data-cfasync="false" src="https://bancadeltempoidea.org/22/5c1550e34ba939167769c099118febce"></script>
+      </div></div>
+    </section>
+    <section class="ad-section" aria-label="أصلي">
+      <p class="ad-label">مساحة إعلانية</p>
+      <!-- ADSTERRA_NATIVE -->
+      <div class="native">
+        <script async fetchpriority="high" data-cfasync="false" src="https://bancadeltempoidea.org/21/b3cc9b1bc5096ef288d36ca03953f128"></script>
+        <div id="container-b3cc9b1bc5096ef288d36ca03953f128"></div>
+      </div>
+    </section>
+    <section class="ad-section" aria-label="إعلان 4">
+      <p class="ad-label">مساحة إعلانية</p>
+      <!-- ADSTERRA_SLOT_4 -->
+      <div class="slot" id="ad-slot-4">
+<script>
+  atOptions = {
+    'key' : 'efa47e34261d0c3a3104d8017548a517',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script data-cfasync="false" src="https://bancadeltempoidea.org/22/efa47e34261d0c3a3104d8017548a517"></script>
+      </div>
+    </section>
+    <section class="ad-section" aria-label="إعلان 5">
+      <p class="ad-label">مساحة إعلانية</p>
+      <!-- ADSTERRA_SLOT_5 -->
+      <div class="slot" id="ad-slot-5"></div>
+    </section>
+</main>
+<footer><b>عرض خاص</b> · شغّلها وخدلك فاصل</footer>
+<!-- ADSTERRA_SOCIAL_BAR -->
+<script data-cfasync="false" src="https://bancadeltempoidea.org/14/d62647f3d9bbd8d35f307d0e2b0fd12a"></script>
+<!-- ADSTERRA_POPUNDER -->
+  <script>
+    (() => {
+      'use strict';
+      const POPUNDER_SRC = 'https://aarems.org/1/bf5ce67f4c3526d422b62bf3427e34c6';
+      if (!POPUNDER_SRC) return;
+      let done = false;
+      const fire = () => {
+        if (done) return;
+        done = true;
+        ['pointerdown', 'touchstart', 'mousedown', 'keydown'].forEach((t) => document.removeEventListener(t, fire, true));
+        const el = document.createElement('script');
+        el.async = true;
+        el.setAttribute('data-cfasync', 'false');
+        el.src = POPUNDER_SRC;
+        document.body.appendChild(el);
+      };
+      ['pointerdown', 'touchstart', 'mousedown', 'keydown'].forEach((t) => document.addEventListener(t, fire, { capture: true, passive: true }));
+    })();
+  </script>
+</body></html>

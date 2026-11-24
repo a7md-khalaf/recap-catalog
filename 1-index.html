@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#151515"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"><script>if(/(invite|recovery|confirmation)_token=/.test(location.hash))location.replace("/admin/"+location.hash);</script><title>عرض خاص · ملخصات</title></head>
+<body><header class="top"><a class="brand" href="index.html"><span class="mark" aria-hidden="true">&#9654;</span><div class="logo" id="site-name">عرض خاص</div></a></header>
+<main>
+<section class="intro"><div class="eyebrow"><span class="dot"></span><span id="tagline">ملخصات أفلام ومسلسلات</span></div><h1>اختار ملخصك<br>وشغّله.</h1></section>
+<input class="search" id="q" type="search" placeholder="ابحث بالاسم…" aria-label="بحث" autocomplete="off">
+<div class="grid" id="grid"></div><p class="empty" id="empty" hidden>مفيش نتائج.</p>
+    <section class="ad-section" aria-label="بانر">
+      <p class="ad-label">مساحة إعلانية</p>
+      <!-- ADSTERRA_BANNER -->
+      <div class="banner-wrap"><div class="banner" dir="ltr">
+        <script>
+          atOptions = {
+            'key' : '5c1550e34ba939167769c099118febce',
+            'format' : 'iframe',
+            'height' : 50,
+            'width' : 320,
+            'params' : {}
+          };
+        </script>
+        <script data-cfasync="false" src="https://bancadeltempoidea.org/22/5c1550e34ba939167769c099118febce"></script>
+      </div></div>
+    </section>
+    <section class="ad-section" aria-label="أصلي">
+      <p class="ad-label">مساحة إعلانية</p>
+      <!-- ADSTERRA_NATIVE -->
+      <div class="native">
+        <script async fetchpriority="high" data-cfasync="false" src="https://bancadeltempoidea.org/21/b3cc9b1bc5096ef288d36ca03953f128"></script>
+        <div id="container-b3cc9b1bc5096ef288d36ca03953f128"></div>
+      </div>
+    </section>
+</main>
+<footer><b>عرض خاص</b> · شغّلها وخدلك فاصل</footer>
+<script src="site-config.js"></script>
+<script src="app.js"></script>
+<script>
+load().then(d=>{d.shows=d.shows.filter(s=>s&&s.title);
+  
+  const g=document.getElementById('grid'),e=document.getElementById('empty'),q=document.getElementById('q');
+  const norm=s=>(s||'').toLowerCase().replace(/[\u064B-\u0652\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه');
+  const draw=()=>{const t=norm(q.value.trim());g.innerHTML='';let n=0;
+    d.shows.forEach(s=>{if(t&&!norm(s.title).includes(t))return;n++;
+      const a=document.createElement('a');a.className='card';a.href='show.html?id='+encodeURIComponent(s.id);
+      const i=document.createElement('img');i.src=mediaUrl(s.poster);i.alt=s.title;i.loading='lazy';
+      const sp=document.createElement('span');sp.textContent=s.title;a.append(i,sp);g.appendChild(a);});
+    e.hidden=n>0;e.textContent=d.shows.length?'مفيش نتائج.':'لسه مفيش ملخصات. ارجع قريب.';};
+  q.addEventListener('input',draw);draw();
+});
+</script></body></html>

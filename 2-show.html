@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#151515"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"><title>عرض خاص</title></head>
+<body><header class="top"><a class="brand" href="index.html"><span class="mark" aria-hidden="true">&#9654;</span><div class="logo" id="site-name">عرض خاص</div></a></header>
+<main>
+<div id="content"></div>
+    <section class="ad-section" aria-label="بانر">
+      <p class="ad-label">مساحة إعلانية</p>
+      <!-- ADSTERRA_BANNER -->
+      <div class="banner-wrap"><div class="banner" dir="ltr">
+        <script>
+          atOptions = {
+            'key' : '5c1550e34ba939167769c099118febce',
+            'format' : 'iframe',
+            'height' : 50,
+            'width' : 320,
+            'params' : {}
+          };
+        </script>
+        <script data-cfasync="false" src="https://bancadeltempoidea.org/22/5c1550e34ba939167769c099118febce"></script>
+      </div></div>
+    </section>
+    <section class="ad-section" aria-label="أصلي">
+      <p class="ad-label">مساحة إعلانية</p>
+      <!-- ADSTERRA_NATIVE -->
+      <div class="native">
+        <script async fetchpriority="high" data-cfasync="false" src="https://bancadeltempoidea.org/21/b3cc9b1bc5096ef288d36ca03953f128"></script>
+        <div id="container-b3cc9b1bc5096ef288d36ca03953f128"></div>
+      </div>
+    </section>
+</main>
+<footer><b>عرض خاص</b> · شغّلها وخدلك فاصل</footer>
+<script src="site-config.js"></script>
+<script src="app.js"></script>
+<script>
+load().then(d=>{
+  
+  const id=new URLSearchParams(location.search).get('id');
+  const s=d.shows.find(x=>x.id===id);const c=document.getElementById('content');
+  if(!s){c.innerHTML='<p class="empty">العمل ده مش موجود. <a href="index.html">الرئيسية</a></p>';return;}
+  document.title=s.title+' · عرض خاص';
+  const top=document.createElement('section');top.className='show';
+  const img=document.createElement('img');img.className='poster';img.src=mediaUrl(s.poster);img.alt=s.title;
+  const info=document.createElement('div');
+  const b=document.createElement('span');b.className='badge';b.textContent=s.type||'';
+  const h=document.createElement('h1');h.textContent=s.title;
+  const p=document.createElement('p');p.textContent=s.description||'';
+  info.append(b,h,p);top.append(img,info);c.appendChild(top);
+  const h2=document.createElement('h2');h2.textContent='الحلقات ('+(s.episodes||[]).length+')';c.appendChild(h2);
+  const ul=document.createElement('ul');ul.className='eps';
+  (s.episodes||[]).forEach((ep,i)=>{const li=document.createElement('li');const a=document.createElement('a');
+    a.href='watch.html?show='+encodeURIComponent(s.id)+'&ep='+(i+1);a.textContent=ep.title;li.appendChild(a);ul.appendChild(li);});
+  c.appendChild(ul);
+});
+</script></body></html>

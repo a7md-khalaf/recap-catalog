@@ -1,0 +1,10 @@
+[build]
+  publish = "."
+  # Skip the build (no credits used) when a commit only touches content: data.json or uploads/.
+  # Exit 0 = skip, exit 1 = build. Code changes (html/css/js) still deploy normally.
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ':!data.json' ':!uploads' ':!README.md'"
+
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex"
