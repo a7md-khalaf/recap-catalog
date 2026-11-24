@@ -76,6 +76,19 @@
           "embed": "https://www.youtube.com/embed/U3Mwzj1Zf68"
         }
       ]
+    },
+    {
+      "id": "smwv5w4fo",
+      "title": "تجريبي ٦",
+      "type": "فيلم",
+      "poster": "posters/demo-series.svg",
+      "description": "",
+      "episodes": [
+        {
+          "title": "تجريبي ٦",
+          "embed": "https://vidoba.org/embed-mxmu80a1mmz3.html"
+        }
+      ]
     }
   ]
 }
