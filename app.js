@@ -45,7 +45,7 @@ async function load() {
       if (!okData(f)) return;
       const fs = JSON.stringify(f);
       try { localStorage.setItem('rc_cache', fs); } catch (e) {}
-      if (fs !== shown && !sessionStorage.getItem('rc_reloaded')) { sessionStorage.setItem('rc_reloaded', '1'); location.reload(); }
+      if (fs !== shown && sessionStorage.getItem('rc_reloaded') !== fs) { sessionStorage.setItem('rc_reloaded', fs); location.reload(); }
     }).catch(() => {});
   }
   if (d) return d;
