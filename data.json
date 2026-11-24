@@ -68,12 +68,12 @@
       "id": "smwv58wl8",
       "title": "TESTFILM",
       "type": "فيلم",
-      "poster": "posters/demo-series.svg",
+      "poster": "https://i.ytimg.com/vi/U3Mwzj1Zf68/hqdefault.jpg",
       "description": "",
       "episodes": [
         {
           "title": "TESTFILM",
-          "embed": "https://mp4plus.org/embed-abc.html"
+          "embed": "https://www.youtube.com/embed/U3Mwzj1Zf68"
         }
       ]
     },
