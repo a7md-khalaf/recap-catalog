@@ -33,7 +33,7 @@ function eps(list) {
     const t = str(e && e.title, 120), u = httpsUrl(e && e.embed);
     if (!t) throw new Error(`الحلقة ${i + 1}: الاسم فاضي أو طويل.`);
     if (!u) throw new Error(`الحلقة ${i + 1}: الرابط لازم يبدأ بـ https وصحيح.`);
-    return { title: t, embed: u };
+    return { title: t, embed: u, createdAt: Date.now() };
   });
 }
 
@@ -61,14 +61,14 @@ async function apply(b) {
     const title = str(b.title, 120); if (!title) throw new Error('اكتب اسم الفيلم (حتى 120 حرف).');
     const desc = str(b.description || '', 1000); if (desc === null) throw new Error('الملخص طويل.');
     const embed = embedOf(b.embed); dup(title);
-    d.shows.push({ id: 's' + Date.now().toString(36), title, type: 'فيلم', poster: posterOf(b.poster, embed), description: desc, episodes: [{ title, embed }] });
+    d.shows.push({ id: 's' + Date.now().toString(36), title, type: 'فيلم', poster: posterOf(b.poster, embed), description: desc, createdAt: Date.now(), episodes: [{ title, embed, createdAt: Date.now() }] });
     msg = 'Add film: ' + title.slice(0, 60);
   } else if (b.op === 'addSeries') {
     const title = str(b.title, 120); if (!title) throw new Error('اكتب اسم المسلسل (حتى 120 حرف).');
     const desc = str(b.description || '', 1000); if (desc === null) throw new Error('الملخص طويل.');
     const type = TYPES.includes(b.type) ? b.type : 'مسلسل';
     const e = eps(b.episodes); dup(title);
-    d.shows.push({ id: 's' + Date.now().toString(36), title, type, poster: posterOf(b.poster, e[0].embed), description: desc, episodes: e });
+    d.shows.push({ id: 's' + Date.now().toString(36), title, type, poster: posterOf(b.poster, e[0].embed), description: desc, createdAt: Date.now(), episodes: e });
     msg = 'Add series: ' + title.slice(0, 60);
   } else if (b.op === 'addEps') {
     const x = find(); if (isFilm(x)) throw new Error('الإضافة للمسلسلات فقط.');
