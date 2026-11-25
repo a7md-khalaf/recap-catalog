@@ -9,9 +9,28 @@
   <div class="watch">شاهد الآن</div>
   <p class="watch-link" id="link-wrap">لو الفيديو مش شغّال، <a id="youtube-link" href="#" target="_blank" rel="noopener noreferrer">افتحه في صفحة جديدة</a></p>
   <div class="nav" id="nav"></div>
+  <div class="share" id="share" hidden></div>
+  <section class="related" id="related" hidden><h2>شاهد أيضاً</h2><div class="strip" id="rel"></div></section>
 </section>
 <script src="site-config.js"></script>
 <script src="app.js"></script>
+<script>
+load().then(d=>{
+  const p=new URLSearchParams(location.search),id=p.get('show'),n=parseInt(p.get('ep'),10);
+  const cur=d.shows.find(x=>x.id===id);
+  const url=location.origin+location.pathname+(cur?'?show='+encodeURIComponent(id)+'&ep='+n:location.search);
+  const title=cur&&cur.episodes&&cur.episodes[n-1]?cur.title+' - '+cur.episodes[n-1].title:document.title;
+  const sh=document.getElementById('share');
+  const wa=mk('a','wa','مشاركة على واتساب');wa.href='https://wa.me/?text='+encodeURIComponent(title+' '+url);
+  const fb=mk('a','fb','مشاركة على فيسبوك');fb.href='https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(url);
+  [wa,fb].forEach(a=>{a.target='_blank';a.rel='noopener noreferrer';sh.appendChild(a);});sh.hidden=false;
+  const rel=document.getElementById('rel');let c=0;
+  sortedShows(d).forEach(({s})=>{if(!s.title||s.id===id||!(s.episodes||[]).length||c>=8)return;c++;
+    const j=newestEp(s);const a=mk('a','tile');a.href=watchHref(s,j);a.append(posterImg(s));
+    if(isNew(showStamp(s)))a.append(newTag());a.append(mk('b',null,s.title));rel.appendChild(a);});
+  if(c)document.getElementById('related').hidden=false;
+});
+</script>
 <script>
 (async () => {
   'use strict';
