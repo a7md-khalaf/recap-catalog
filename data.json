@@ -102,6 +102,19 @@
           "embed": "https://anafast.org/embed-92g6wp9ikkpu.html"
         }
       ]
+    },
+    {
+      "id": "smwvo9li5",
+      "title": "تجريبي 8",
+      "type": "فيلم",
+      "poster": "posters/demo-series.svg",
+      "description": "",
+      "episodes": [
+        {
+          "title": "تجريبي 8",
+          "embed": "https://vidoba.org/embed-mxmu80a1mmz3.html"
+        }
+      ]
     }
   ]
 }
