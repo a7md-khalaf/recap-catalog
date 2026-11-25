@@ -3,6 +3,7 @@
 <body><header class="top"><a class="brand" href="index.html"><span class="mark" aria-hidden="true">&#9654;</span><div class="logo" id="site-name">عرض خاص</div></a></header>
 <main>
 <section class="intro"><div class="eyebrow"><span class="dot"></span><span id="tagline">ملخصات أفلام ومسلسلات</span></div><h1>اختار ملخصك<br>وشغّله.</h1></section>
+<section class="latest" id="latest" hidden><h2>أحدث الحلقات</h2><div class="strip" id="strip"></div></section>
 <input class="search" id="q" type="search" placeholder="ابحث بالاسم…" aria-label="بحث" autocomplete="off">
 <div class="grid" id="grid"></div><p class="empty" id="empty" hidden>مفيش نتائج.</p>
     <section class="ad-section" aria-label="بانر">
@@ -35,14 +36,21 @@
 <script src="app.js"></script>
 <script>
 load().then(d=>{d.shows=d.shows.filter(s=>s&&s.title);
-  
   const g=document.getElementById('grid'),e=document.getElementById('empty'),q=document.getElementById('q');
   const norm=s=>(s||'').toLowerCase().replace(/[\u064B-\u0652\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه');
+  const order=sortedShows(d);
+  // latest episodes strip
+  const eps=[];d.shows.forEach((s,si)=>(s.episodes||[]).forEach((ep,j)=>eps.push({s,j,ep,k:(ep.createdAt)||(s.createdAt)||(si+(j+1)/1000)})));
+  eps.sort((a,b)=>b.k-a.k);
+  const strip=document.getElementById('strip');
+  eps.slice(0,10).forEach(x=>{const a=mk('a','tile');a.href=watchHref(x.s,x.j);a.append(posterImg(x.s));
+    if(isNew(x.ep.createdAt))a.append(newTag());
+    a.append(mk('b',null,x.s.title),mk('small',null,x.s.type==='فيلم'?'فيلم':x.ep.title));strip.appendChild(a);});
+  if(eps.length)document.getElementById('latest').hidden=false;
   const draw=()=>{const t=norm(q.value.trim());g.innerHTML='';let n=0;
-    d.shows.forEach(s=>{if(t&&!norm(s.title).includes(t))return;n++;
-      const a=document.createElement('a');a.className='card';a.href='show.html?id='+encodeURIComponent(s.id);
-      const i=document.createElement('img');i.src=mediaUrl(s.poster);i.alt=s.title;i.loading='lazy';
-      const sp=document.createElement('span');sp.textContent=s.title;a.append(i,sp);g.appendChild(a);});
+    order.forEach(({s})=>{if(t&&!norm(s.title).includes(t))return;n++;
+      const a=mk('a','card');a.href='show.html?id='+encodeURIComponent(s.id);
+      a.append(posterImg(s));if(isNew(showStamp(s)))a.append(newTag());a.append(mk('span',null,s.title));g.appendChild(a);});
     e.hidden=n>0;e.textContent=window.RC_FAILED?'تعذر تحميل المحتوى. حدّث الصفحة.':(d.shows.length?'مفيش نتائج.':'لسه مفيش ملخصات. ارجع قريب.');};
   q.addEventListener('input',draw);draw();
 });
