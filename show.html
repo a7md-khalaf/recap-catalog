@@ -47,8 +47,8 @@ load().then(d=>{
   info.append(b,h,p);top.append(img,info);c.appendChild(top);
   const h2=document.createElement('h2');h2.textContent='الحلقات ('+(s.episodes||[]).length+')';c.appendChild(h2);
   const ul=document.createElement('ul');ul.className='eps';
-  (s.episodes||[]).forEach((ep,i)=>{const li=document.createElement('li');const a=document.createElement('a');
-    a.href='watch.html?show='+encodeURIComponent(s.id)+'&ep='+(i+1);a.textContent=ep.title;li.appendChild(a);ul.appendChild(li);});
+  (s.episodes||[]).map((ep,i)=>({ep,i,k:itemKey(ep,i)})).sort((a,b)=>b.k-a.k).forEach(({ep,i})=>{const li=document.createElement('li');const a=document.createElement('a');
+    a.href=watchHref(s,i);a.append(mk('span','t',ep.title));if(isNew(ep.createdAt))a.append(newTag());li.appendChild(a);ul.appendChild(li);});
   c.appendChild(ul);
 });
 </script></body></html>
