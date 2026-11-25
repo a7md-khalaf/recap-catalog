@@ -89,6 +89,19 @@
           "embed": "https://vidoba.org/embed-mxmu80a1mmz3.html"
         }
       ]
+    },
+    {
+      "id": "smwvo96wf",
+      "title": "تجريبي 7",
+      "type": "فيلم",
+      "poster": "posters/demo-series.svg",
+      "description": "",
+      "episodes": [
+        {
+          "title": "تجريبي 7",
+          "embed": "https://anafast.org/embed-92g6wp9ikkpu.html"
+        }
+      ]
     }
   ]
 }
