@@ -1,3 +1,19 @@
 {
-  "shows": []
+  "shows": [
+    {
+      "id": "smwy1kqib",
+      "title": "فيلم الجواهرجي",
+      "type": "فيلم",
+      "poster": "posters/demo-series.svg",
+      "description": "",
+      "createdAt": 1795727141939,
+      "episodes": [
+        {
+          "title": "فيلم الجواهرجي",
+          "embed": "https://mp4plus.org/embed-nuho62gguaej.html",
+          "createdAt": 1795727141939
+        }
+      ]
+    }
+  ]
 }
