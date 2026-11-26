@@ -1,25 +1,3 @@
 {
-  "shows": [
-    {
-      "id": "demo-series",
-      "title": "مسلسل تجريبي",
-      "type": "مسلسل",
-      "poster": "posters/demo-series.svg",
-      "description": "ملخص تجريبي لاختبار الموقع. امسحه من لوحة التحكم لما تضيف أول عمل.",
-      "episodes": [
-        {
-          "title": "الحلقة ١",
-          "embed": "https://mp4plus.org/embed-lx4xqkg77dad.html"
-        },
-        {
-          "title": "الحلقة ٢",
-          "embed": "https://mp4plus.org/embed-lx4xqkg77dad.html"
-        },
-        {
-          "title": "الحلقة ٣",
-          "embed": "https://mp4plus.org/embed-lx4xqkg77dad.html"
-        }
-      ]
-    }
-  ]
+  "shows": []
 }
